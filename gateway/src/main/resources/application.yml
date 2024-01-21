@@ -1,0 +1,21 @@
+server:
+  port: 8888
+spring:
+  application:
+    name: API-GATEWAY
+  cloud:
+    consul:
+      config:
+        enabled: false
+    gateway:
+      default-filters:
+        - DedupeResponseHeader=Access-Control-Allow-Credentials Access-Control-Allow-Origin
+      globalcors:
+        corsConfigurations:
+          '[/**]':
+            allowedOrigins: "*"
+            allowedMethods: "*"
+            allowedHeaders: "*"
+eureka:
+  instance:
+    hostname: localhost

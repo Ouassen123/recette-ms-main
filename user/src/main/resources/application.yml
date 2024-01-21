@@ -1,0 +1,19 @@
+spring:
+  application:
+    name: USER-MS
+  cloud:
+    consul:
+      host: localhost
+      port: 8500
+      discovery: USER-MS
+      config:
+        enabled: false
+  datasource:
+    url: jdbc:mysql://localhost:3306/user-ms
+    username: root
+    password: P@$$w0rd
+  jpa:
+    hibernate:
+      ddl-auto: create
+server:
+  port: 8030

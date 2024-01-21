@@ -1,0 +1,89 @@
+version: '3'
+services:
+  mysql:
+    image: mysql:latest
+    environment:
+      - MYSQL_ROOT_PASSWORD=P@ssw0rd
+      - MYSQL_DATABASE=recette-ms
+      - MYSQL_DATABASE=user-ms
+    ports:
+      - "3306:3306"
+    networks:
+      - mynetwork
+
+  consul:
+    image: consul:1.15.4
+    ports:
+      - "8500:8500"
+    networks:
+      - mynetwork
+
+  recette-app:
+    depends_on:
+      - mysql
+      - consul
+    build:
+      context: ./recette
+    ports:
+      - "8091:8091"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/recette-ms?createDatabaseIfNotExist=true
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: P@ssw0rd
+      SPRING_CLOUD_CONSUL_HOST: consul
+      SPRING_CLOUD_CONSUL_PORT: 8500
+      SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED: 'true'
+      SPRING_JPA_HIBERNATE_DDL-AUTO: 'update'
+      userUrl: http://user-app:8030/api/user
+    networks:
+      - mynetwork
+
+  gateway-app:
+    build:
+      context: ./gateway
+    ports:
+      - "8888:8888"
+    depends_on:
+      - consul
+    environment:
+      SPRING_CLOUD_CONSUL_HOST: consul
+      SPRING_CLOUD_CONSUL_PORT: 8500
+      SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED: 'true'
+    networks:
+      - mynetwork
+
+  user-app:
+    build:
+      context: ./user
+    ports:
+      - "8030:8030"
+    depends_on:
+      - mysql
+      - consul
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/user-ms
+      SPRING_DATASOURCE_USERNAME: root
+      SPRING_DATASOURCE_PASSWORD: P@ssw0rd
+      SPRING_CLOUD_CONSUL_HOST: consul
+      SPRING_CLOUD_CONSUL_PORT: 8500
+      SPRING_CLOUD_CONSUL_DISCOVERY_ENABLED: 'true'
+      SPRING_JPA_HIBERNATE_DDL-AUTO: 'update'
+    networks:
+      - mynetwork
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    environment:
+      PMA_HOST: mysql
+      PMA_PORT: 3306
+      MYSQL_ROOT_PASSWORD: P@ssw0rd
+    ports:
+      - "9000:80"
+    networks:
+      - mynetwork
+    expose:
+      - "80"
+
+networks:
+  mynetwork:
+    driver: bridge
